@@ -3,11 +3,17 @@ using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
 {
-    [SerializeField] float rcsThrust = 200f;
-    [SerializeField] float mainThrust = 30f;
+    [SerializeField] float rcsThrust = 300f;
+    [SerializeField] float mainThrust = 2000f;
+    [SerializeField] float levelLoadDelay = 2f;
+
     [SerializeField] AudioClip mainEngine;
     [SerializeField] AudioClip death;
     [SerializeField] AudioClip success;
+
+    [SerializeField] ParticleSystem mainEngineParticles;
+    [SerializeField] ParticleSystem deathParticles;
+    [SerializeField] ParticleSystem successParticles;
 
     Rigidbody rigidBody;
     AudioSource audioSource;
@@ -53,7 +59,8 @@ public class Rocket : MonoBehaviour
         state = State.Transcending;
         audioSource.Stop(); // this stops the thrusting sound
         audioSource.PlayOneShot(success);
-        Invoke("LoadNextLevel", 1f); // parameterize time
+        successParticles.Play();
+        Invoke("LoadNextLevel", levelLoadDelay);
     }
 
     void StartDeathSequence()
@@ -61,7 +68,8 @@ public class Rocket : MonoBehaviour
         state = State.Dying;
         audioSource.Stop(); // this stops the thrusting sound
         audioSource.PlayOneShot(death);
-        Invoke("LoadFirstLevel", 1f); // parameterize time
+        deathParticles.Play();
+        Invoke("LoadFirstLevel", levelLoadDelay);
     }
 
     void LoadFirstLevel()
@@ -83,15 +91,17 @@ public class Rocket : MonoBehaviour
         else
         {
             audioSource.Stop();
+            mainEngineParticles.Stop();
         }
     }
 
     void ApplyThrust()
     {
-        rigidBody.AddRelativeForce(Vector3.up * mainThrust);
+        rigidBody.AddRelativeForce(Vector3.up * mainThrust * Time.deltaTime);
         if (!audioSource.isPlaying) // so it doesn't layer
         {
             audioSource.PlayOneShot(mainEngine);
+            mainEngineParticles.Play();
         }
     }
 
